@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Monitor — Prototype</title>
+<style>
+  :root{
+    --ink:#201e1a;
+    --paper:#faf8f3;
+    --paper-raised:#f1ede3;
+    --line:#ded8c8;
+    --teal:#2c6e6a;
+    --teal-dim:#bcd6d4;
+    --amber:#b5731c;
+    --amber-dim:#ecd8bb;
+    --muted:#6b6457;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Iowan Old Style','Georgia',serif;
+    line-height:1.5;
+  }
+  .label{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    letter-spacing:0.02em;
+    color:var(--muted);
+  }
+  header{
+    padding:40px 32px 24px;
+    border-bottom:1px solid var(--line);
+    max-width:1040px;
+    margin:0 auto;
+  }
+  header .kicker{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--teal);
+    margin-bottom:8px;
+  }
+  header h1{
+    font-size:32px;
+    margin:0 0 6px;
+    font-weight:600;
+  }
+  header p{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:14px;
+    color:var(--muted);
+    margin:0;
+    max-width:640px;
+  }
+  main{
+    max-width:1040px;
+    margin:0 auto;
+    padding:24px 32px 64px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:28px;
+  }
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    padding:20px 22px 24px;
+  }
+  .panel.wide{ grid-column:1 / -1; }
+  .panel h2{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-weight:600;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .panel .sub{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  svg text{ font-family:'Helvetica Neue',Arial,sans-serif; }
+  .axis{ stroke:var(--line); stroke-width:1; }
+  .gridline{ stroke:var(--line); stroke-width:1; stroke-dasharray:2,3; }
+  .bar{ fill:var(--teal); }
+  .bar:hover{ fill:var(--amber); }
+  .bar-neg{ fill:var(--amber); }
+  .line-path{ fill:none; stroke:var(--teal); stroke-width:2; }
+  .dot{ fill:var(--teal); }
+  .tick-label{ fill:var(--muted); font-size:10px; }
+  .val-label{ fill:var(--ink); font-size:10px; font-family:'Helvetica Neue',Arial,sans-serif; }
+
+  table{ width:100%; border-collapse:collapse; font-family:'Helvetica Neue',Arial,sans-serif; font-size:13px; }
+  th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); border-bottom:1px solid var(--line); padding:6px 10px 8px; font-weight:600;}
+  td{ padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:hover td{ background:var(--paper); }
+  input[type=text]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:13px;
+    margin-bottom:14px;
+  }
+  .pill{
+    display:inline-block;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:2px;
+    background:var(--teal-dim);
+    color:var(--teal);
+  }
+  .note{
+    grid-column:1/-1;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:16px;
+    margin-top:8px;
+  }
+  a{ color:var(--teal); }
+  @media (max-width:720px){
+    main{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Prototype — mock data</div>
+  <h1>Media Monitor</h1>
+  <p>This is a working scaffold, not a real monitoring run. Every number below is invented so you can see the mechanics — swap in the real pipeline's JSON output and the charts update the same way.</p>
+</header>
+
+<main>
+
+  <div class="panel wide">
+    <h2>Coverage over time</h2>
+    <p class="sub">Articles published per week (mock data)</p>
+    <svg id="chart-time" viewBox="0 0 960 220" style="width:100%;height:auto;"></svg>
+  </div>
+
+  <div class="panel">
+    <h2>Outlet groups</h2>
+    <p class="sub">Share of articles by outlet type (mock data)</p>
+    <svg id="chart-outlets" viewBox="0 0 440 240" style="width:100%;height:auto;"></svg>
+  </div>
+
+  <div class="panel">
+    <h2>How actors are portrayed</h2>
+    <p class="sub">Average stance, −2 to +2 (mock data)</p>
+    <svg id="chart-stance" viewBox="0 0 440 240" style="width:100%;height:auto;"></svg>
+  </div>
+
+  <div class="panel wide">
+    <h2>Articles</h2>
+    <p class="sub">Search headlines and outlets</p>
+    <input type="text" id="search" placeholder="Search headlines, outlets…">
+    <table>
+      <thead><tr><th>Date</th><th>Outlet</th><th>Headline</th><th>Topic</th></tr></thead>
+      <tbody id="article-rows"></tbody>
+    </table>
+  </div>
+
+  <p class="note">Built as a scaffold for a media-monitoring dashboard. Replace <code>MOCK_DATA</code> below with JSON generated by your real coding pipeline — the chart-drawing functions don't need to change.</p>
+
+</main>
+
+<script>
+// ---- MOCK DATA — replace this block with your real pipeline's output ----
+const MOCK_DATA = {
+  weekly: [
+    {week:"Wk 1", count: 14},
+    {week:"Wk 2", count: 21},
+    {week:"Wk 3", count: 19},
+    {week:"Wk 4", count: 35},
+    {week:"Wk 5 (election)", count: 58},
+    {week:"Wk 6", count: 40},
+    {week:"Wk 7", count: 22},
+  ],
+  outlets: [
+    {group:"National press", share: 38},
+    {group:"Regional press", share: 22},
+    {group:"International", share: 18},
+    {group:"Broadcast", share: 14},
+    {group:"Specialist", share: 8},
+  ],
+  stance: [
+    {actor:"Governing party", score: 0.6},
+    {actor:"Opposition bloc", score: -0.4},
+    {actor:"EU institutions", score: 0.9},
+    {actor:"Election commission", score: 0.1},
+    {actor:"Civil society groups", score: -0.8},
+  ],
+  articles: [
+    {date:"2026-09-28", outlet:"Danas", headline:"Opposition unveils unified campaign platform", topic:"Campaign", url:"#"},
+    {date:"2026-10-01", outlet:"Politico Europe", headline:"What Serbia's vote means for EU accession talks", topic:"EU path", url:"#"},
+    {date:"2026-10-03", outlet:"RTS", headline:"Election commission confirms final candidate lists", topic:"Process", url:"#"},
+    {date:"2026-10-05", outlet:"Reuters", headline:"Economic concerns dominate final week of campaigning", topic:"Economy", url:"#"},
+    {date:"2026-10-06", outlet:"Blic", headline:"Turnout expected to be higher than 2024", topic:"Process", url:"#"},
+  ]
+};
+// ---------------------------------------------------------------------
+
+function el(tag, attrs){
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function drawLineChart(svg, data){
+  const W=960,H=220,padL=36,padR=16,padT=16,padB=28;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const max = Math.max(...data.map(d=>d.count)) * 1.15;
+  const stepX = plotW/(data.length-1);
+
+  // gridlines
+  for(let i=0;i<=4;i++){
+    const y = padT + plotH - (plotH*i/4);
+    svg.appendChild(el('line',{class:'gridline',x1:padL,x2:W-padR,y1:y,y2:y}));
+    svg.appendChild(el('text',{class:'tick-label',x:4,y:y+3},));
+  }
+  // axis
+  svg.appendChild(el('line',{class:'axis',x1:padL,x2:W-padR,y1:H-padB,y2:H-padB}));
+
+  let d = "";
+  data.forEach((pt,i)=>{
+    const x = padL + i*stepX;
+    const y = padT + plotH - (pt.count/max)*plotH;
+    d += (i===0?"M":"L") + x + "," + y + " ";
+  });
+  svg.appendChild(el('path',{class:'line-path', d}));
+
+  data.forEach((pt,i)=>{
+    const x = padL + i*stepX;
+    const y = padT + plotH - (pt.count/max)*plotH;
+    svg.appendChild(el('circle',{class:'dot',cx:x,cy:y,r:3}));
+    const label = el('text',{class:'val-label',x:x,y:y-8,'text-anchor':'middle'});
+    label.textContent = pt.count;
+    svg.appendChild(label);
+    const xlabel = el('text',{class:'tick-label',x:x,y:H-8,'text-anchor':'middle'});
+    xlabel.textContent = pt.week;
+    svg.appendChild(xlabel);
+  });
+}
+
+function drawBarChart(svg, data, keyField, valField){
+  const W=440,H=240,padL=110,padR=50,padT=10,padB=10;
+  const plotW = W-padL-padR;
+  const rowH = (H-padT-padB)/data.length;
+  const max = Math.max(...data.map(d=>d[valField]));
+
+  data.forEach((d,i)=>{
+    const y = padT + i*rowH + rowH*0.2;
+    const barH = rowH*0.6;
+    const w = (d[valField]/max)*plotW;
+    svg.appendChild(el('rect',{class:'bar', x:padL, y, width:w, height:barH}));
+    const label = el('text',{class:'tick-label', x:padL-8, y:y+barH*0.7, 'text-anchor':'end'});
+    label.textContent = d[keyField];
+    svg.appendChild(label);
+    const val = el('text',{class:'val-label', x:padL+w+6, y:y+barH*0.7});
+    val.textContent = d[valField] + (valField==='share' ? '%' : '');
+    svg.appendChild(val);
+  });
+}
+
+function drawStanceChart(svg, data){
+  const W=440,H=240,padL=130,padR=30,padT=10,padB=10;
+  const plotW = W-padL-padR;
+  const mid = padL + plotW/2;
+  const rowH = (H-padT-padB)/data.length;
+  const maxAbs = 2;
+
+  svg.appendChild(el('line',{class:'axis', x1:mid, x2:mid, y1:padT, y2:H-padB}));
+
+  data.forEach((d,i)=>{
+    const y = padT + i*rowH + rowH*0.2;
+    const barH = rowH*0.6;
+    const w = Math.abs(d.score)/maxAbs * (plotW/2);
+    const x = d.score >= 0 ? mid : mid - w;
+    svg.appendChild(el('rect',{class: d.score>=0 ? 'bar' : 'bar-neg', x, y, width:w, height:barH}));
+    const label = el('text',{class:'tick-label', x:padL-10, y:y+barH*0.7, 'text-anchor':'end'});
+    label.textContent = d.actor;
+    svg.appendChild(label);
+    const val = el('text',{class:'val-label', x: d.score>=0 ? x+w+6 : x-6, y:y+barH*0.7, 'text-anchor': d.score>=0 ? 'start':'end'});
+    val.textContent = (d.score>0?'+':'') + d.score.toFixed(1);
+    svg.appendChild(val);
+  });
+}
+
+function renderArticles(rows){
+  const tbody = document.getElementById('article-rows');
+  tbody.innerHTML = "";
+  rows.forEach(a=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${a.date}</td><td>${a.outlet}</td><td><a href="${a.url}">${a.headline}</a></td><td><span class="pill">${a.topic}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+drawLineChart(document.getElementById('chart-time'), MOCK_DATA.weekly);
+drawBarChart(document.getElementById('chart-outlets'), MOCK_DATA.outlets, 'group', 'share');
+drawStanceChart(document.getElementById('chart-stance'), MOCK_DATA.stance);
+renderArticles(MOCK_DATA.articles);
+
+document.getElementById('search').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  const filtered = MOCK_DATA.articles.filter(a =>
+    a.headline.toLowerCase().includes(q) || a.outlet.toLowerCase().includes(q)
+  );
+  renderArticles(filtered);
+});
+</script>
+
+</body>
+</html>
